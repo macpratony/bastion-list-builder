@@ -175,9 +175,30 @@ footer{max-width:1120px;margin:0 auto;padding:0 16px 30px;color:var(--muted);fon
 .wtable tr:last-child td{border-bottom:0}
 .wtable td.wn{text-align:left;font-family:var(--font-display);font-weight:500;font-size:13.5px;white-space:normal;min-width:150px;padding-left:12px}
 .wkw{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.wkw span{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--accent-bright);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:3px;padding:1px 5px}
+.wkw button{background:none;cursor:pointer;font:inherit;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--accent-bright);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:3px;padding:1px 5px}
 .sheet-ab{display:grid;gap:14px}
 .sheet-ab .an{font-weight:600;color:var(--accent-bright)}
 .sheet-ab .ad{white-space:pre-line;color:var(--text-secondary);margin-top:2px}
 .kw{display:flex;flex-wrap:wrap;gap:6px}
 .kw span{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line-strong);background:var(--surface);border-radius:4px;padding:4px 8px}
+.wkw button:hover,.wkw button:focus-visible{background:var(--accent-soft);outline:none}
+.kw-ov{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55)}
+.kw-pop{position:fixed;width:min(320px,calc(100vw - 24px));background:var(--surface-elevated);border:1px solid var(--accent);border-radius:var(--radius-md);padding:12px 14px;box-shadow:0 12px 32px -8px rgba(0,0,0,.7);outline:none}
+.kw-t{color:var(--accent-bright);font-weight:600;letter-spacing:1px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--line-strong)}
+.kw-d{white-space:pre-line;font-size:13.5px;line-height:1.5}
+.kw-link{background:none;border:0;padding:0;font:inherit;color:var(--accent-bright);cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.kw-link:hover,.kw-link:focus-visible{color:var(--text);outline:none}
+/* estratagemas (colores de turno como en warmind) */
+.st-group{display:inline-flex;gap:8px;align-items:center;background:none;border:0;padding:0 0 10px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text)}
+.st-group span{color:var(--accent);font-size:11px}
+.strat{--tc:#1FB39A;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--tc);border-radius:var(--radius-md)}
+.strat.st-your{--tc:#3E9BD6}.strat.st-opponent{--tc:#EE5A4F}
+.st-head{display:flex;align-items:flex-start;gap:12px;width:100%;background:none;border:0;padding:10px 14px;text-align:left;cursor:pointer;color:var(--text);font:inherit}
+.st-n{display:block;font-weight:600;color:var(--accent-bright)}
+.st-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.st-turn{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tc);border:1px solid var(--tc);border-radius:4px;padding:2px 7px}
+.st-cp{flex:none;font-family:var(--font-mono);font-size:12px;color:var(--accent-bright);border:1px solid var(--accent);border-radius:4px;padding:1px 7px}
+.st-arr{flex:none;color:var(--accent);font-size:11px;padding-top:2px}
+.st-body{display:grid;gap:8px;padding:0 14px 12px;font-size:13.5px;line-height:1.5}
+.st-row{white-space:pre-line}
+.st-grp{margin-bottom:6px}.st-grp .cards{margin-bottom:10px}

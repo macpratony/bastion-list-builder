@@ -285,20 +285,50 @@ function catChips(fid, cur, act){
 }
 
 /* ---------- hojas de datos: data/<facción>.json, se cargan al abrir la facción ---------- */
-const SHEETS = {};
+const SHEETS = {}, DETS = {};
 function loadSheets(fid){
   if(SHEETS[fid]) return;
   SHEETS[fid] = "loading";
   fetch(`data/${fid}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
-    .then(d=>{ SHEETS[fid]=d; }).catch(()=>{ SHEETS[fid]="error"; })
+    .then(d=>{ SHEETS[fid]=d.units; DETS[fid]=d.det; }).catch(()=>{ SHEETS[fid]="error"; })
     .finally(()=>{ if(S.tab==="facciones" && S.facOpen===fid) render(); });
+}
+/* data/_reglas.json, igual que en warmind:
+   kw: descripción de cada palabra clave de arma (Pistola, Heridas Devastadoras…), por nombre en mayúsculas
+   st: estratagemas básicas; cada hoja lista en «cs» las que puede usar */
+let KW_RULES = null;
+function loadRules(){
+  if(KW_RULES) return;
+  KW_RULES = {kw:{}, st:[]};
+  fetch("data/_reglas.json").then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d=>{ KW_RULES=d; if(S.tab==="facciones" && S.facUnit) render(); })
+    .catch(()=>{ KW_RULES=null; });
+}
+/* texto con las palabras clave entre corchetes enlazadas a su descripción */
+const richText = s => esc(s).replace(/\[([^\]]+)\]/g, (m,k)=>`<button type="button" class="kw-link" data-act="kwInfo" data-v="${k}">[${k}]</button>`);
+function showRule(el, key){
+  const r = KW_RULES && KW_RULES.kw[String(key).trim().toUpperCase()]; if(!r) return;
+  document.querySelector(".kw-ov")?.remove();
+  const o = document.createElement("div"); o.className="kw-ov";
+  o.innerHTML = `<div class="kw-pop" role="dialog" aria-modal="true" tabindex="-1"><div class="kw-t">${esc(r[0])}</div><div class="kw-d">${esc(r[1])}</div></div>`;
+  const close = () => { o.remove(); document.removeEventListener("keydown", key2); el.focus(); };
+  const key2 = ev => { if(ev.key==="Escape") close(); };
+  o.addEventListener("click", close);
+  document.addEventListener("keydown", key2);
+  document.body.appendChild(o);
+  // se coloca junto a la etiqueta, sin salirse de la pantalla
+  const p = o.firstChild, b = el.getBoundingClientRect(), pr = p.getBoundingClientRect(), m = 12;
+  const left = Math.max(m, Math.min(b.left, innerWidth - pr.width - m));
+  const top = b.top - pr.height - 8 >= m ? b.top - pr.height - 8 : Math.min(b.bottom + 8, innerHeight - pr.height - m);
+  p.style.left = left+"px"; p.style.top = Math.max(m, top)+"px";
+  p.focus();
 }
 const sheetOf = (fid,id) => Array.isArray(SHEETS[fid]) ? SHEETS[fid].find(u=>u.id===id) : null;
 const ROLE_ONE = {H:"Héroe épico",P:"Personaje",L:"Línea de batalla",I:"Infantería",M:"Montado",B:"Bestia",N:"Monstruo",E:"Enjambre",V:"Vehículo",T:"Transporte asignado",F:"Fortificación",G:"Leyendas"};
 
 function viewFaction(){
   const f = fac(S.facOpen);
-  loadSheets(f.id);
+  loadSheets(f.id); loadRules();
   if(S.facUnit) return viewSheet(f);
   const lists = S.lists.filter(l=>l.faction===f.id);
   const q = (S.rosterQ||"").toLowerCase().trim();
@@ -342,11 +372,35 @@ function weaponTable(title, skill, ws){
     <div class="wtable"><table>
       <thead><tr><th></th><th>Alcance</th><th>A</th><th>${skill}</th><th>S</th><th>AP</th><th>D</th></tr></thead>
       <tbody>${ws.map(([n,rg,a,sk,s,ap,d,kw])=>`<tr>
-        <td class="wn">${esc(n)}${kw.length?`<div class="wkw">${kw.map(k=>`<span>${esc(k)}</span>`).join("")}</div>`:""}</td>
+        <td class="wn">${esc(n)}${kw.length?`<div class="wkw">${kw.map(k=>`<button type="button" data-act="kwInfo" data-v="${esc(k)}">${esc(k)}</button>`).join("")}</div>`:""}</td>
         <td>${esc(rg)}</td><td>${esc(a)}</td><td>${esc(sk)}</td><td>${esc(s)}</td><td>${esc(ap)}</td><td>${esc(d)}</td>
       </tr>`).join("")}</tbody>
     </table></div>
   </div>`;
+}
+
+/* estratagemas que puede usar la unidad: las básicas y las de cada destacamento de su facción.
+   Cada grupo se pliega y cada estratagema se despliega con sus detalles */
+function stratagemsHTML(u, fid){
+  const core = KW_RULES ? KW_RULES.st : [], dets = DETS[fid] || [];
+  const groups = [
+    {key:"c", title:core[0]?.cat || "Básica", list:(u.cs||[]).map(i=>[`c${i}`, core[i]])},
+    ...(u.ds||[]).map(([d,is])=>({key:`d${d}`, title:dets[d]?.n, list:is.map(i=>[`d${d}-${i}`, dets[d]?.st[i]])}))
+  ].map(g=>({...g, list:g.list.filter(([,s])=>s)})).filter(g=>g.title && g.list.length);
+  if(!groups.length) return "";
+  const open = S.stratOpen || (S.stratOpen = new Set()), exp = S.stratExp || (S.stratExp = new Set());
+  const row = (lbl, txt) => txt ? `<div class="st-row"><span class="lbl">${lbl}</span>${richText(txt)}</div>` : "";
+  const card = ([id,s]) => { const on = exp.has(id); return `<div class="strat st-${s.t}">
+    <button class="st-head" data-act="stratToggle" data-v="${id}" aria-expanded="${on}">
+      <span class="grow"><span class="st-n">${esc(s.n)}</span><span class="st-tags"><span class="st-turn">${esc(s.tl)}</span><span class="tag">${esc(s.cat)}</span></span></span>
+      <span class="st-cp">${s.c} PM</span><span class="st-arr">${on?"▾":"▸"}</span>
+    </button>
+    ${on?`<div class="st-body">${row("Cuándo",s.w)}${row("Objetivo",s.o)}${row("Restricciones",s.r)}<div class="st-row"><div class="lbl">Efecto</div>${richText(s.e)}</div></div>`:""}
+  </div>`; };
+  return `<h2>Estratagemas</h2>${groups.map(g=>{ const on = open.has(g.key); return `<div class="st-grp">
+    <button class="st-group" data-act="stratGroup" data-v="${g.key}" aria-expanded="${on}">${esc(g.title)} · ${g.list.length} <span>${on?"▾":"▸"}</span></button>
+    ${on?`<div class="cards">${g.list.map(card).join("")}</div>`:""}
+  </div>`; }).join("")}`;
 }
 
 function viewSheet(f){
@@ -387,8 +441,9 @@ function viewSheet(f){
   </div>
   ${u.ab.length?`<h2>Habilidades</h2><div class="panel sheet-ab">${u.ab.map(([n,d,army])=>`<div>
     <div class="an">${esc(n)}${army?`<em class="tag">Ejército</em>`:""}</div>
-    <div class="ad">${esc(d)}</div>
+    <div class="ad">${richText(d)}</div>
   </div>`).join("")}</div>`:""}
+  ${stratagemsHTML(u, f.id)}
   ${chips("Palabras clave", u.kw)}
   ${chips("Palabras clave de facción", u.fk)}
   ${chips("Puede liderar", u.at)}
@@ -956,8 +1011,11 @@ app.addEventListener("click", async ev=>{
   switch(t.dataset.act){
     case "openFac": S.facOpen=v; S.facUnit=null; S.rosterQ=""; window.scrollTo({top:0}); break;
     case "closeFac": S.facOpen=null; S.facUnit=null; break;
-    case "openUnit": S.facUnit=v; window.scrollTo({top:0}); break;
+    case "openUnit": S.facUnit=v; S.stratExp=null; window.scrollTo({top:0}); break;
     case "closeUnit": S.facUnit=null; break;
+    case "kwInfo": showRule(t, v); return;
+    case "stratGroup": { const x=S.stratOpen||(S.stratOpen=new Set()); x.has(v)?x.delete(v):x.add(v); break; }
+    case "stratToggle": { const x=S.stratExp||(S.stratExp=new Set()); x.has(v)?x.delete(v):x.add(v); break; }
     case "retrySheets": delete SHEETS[v]; break;
     case "facFilter": S.facFilter=v; break;
     case "addCat": S.addCat=v; break;
