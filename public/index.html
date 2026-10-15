@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06090e">
+<title>Bastión de Mando</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Rajdhani:wght@600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 28 7v8c0 7-5 12.5-12 15C9 27.5 4 22 4 15V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8v16M10 13h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Bastión<em>·</em>Mando
+    </div>
+    <span class="spacer"></span>
+    <button class="sync" id="sync" title="Cuenta y sincronización"><i></i><span>Local</span></button>
+    <button class="icon-btn" id="theme" title="Cambiar tema">◐</button>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main id="app"></main>
+<footer>Hojas de datos y puntos de 11.ª edición según warmind.online (14 de octubre de 2026). Inicia sesión para guardar tus datos en tu cuenta y abrirlos desde cualquier dispositivo; sin sesión, los cambios no se guardan.</footer>
+<input type="file" id="importFile" accept="application/json" hidden>
+
+<script src="app.js"></script>
+</body>
+</html>
